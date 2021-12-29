@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\UrlShortenerContract;
 use App\Models\Site;
 use Illuminate\Http\Request;
 
 class SiteController extends Controller
 {
 
-    private Site $site;
+    private Site $siteModel;
 
     /**
      * Create a new controller instance.
@@ -17,7 +18,7 @@ class SiteController extends Controller
      */
     public function __construct(Site $site)
     {
-        $this->site = $site;
+        $this->siteModel = $site;
     }
 
     /**
@@ -27,7 +28,7 @@ class SiteController extends Controller
      */
     public function index()
     {
-        $crawledSites = $this->site->latest(100);
+        $crawledSites = $this->siteModel->all();
 
         return view('sites.index',compact('crawledSites'));
     }
@@ -35,62 +36,37 @@ class SiteController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     * @param UrlShortenerContract $urlShortener
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, UrlShortenerContract $urlShortener)
     {
-        // we should move this validation to a form request
+        // we should move this validation to a form request and validate that is a valid url, make sanitization
         $request->validate(['long_url' => 'required']);
 
+        $long_url = $request->get('long_url');
 
-
-        Site::create($request->all());
-
-        return redirect()->route('sites.index')
-            ->with('success','Site crawling started successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Site  $site
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Site $site)
-    {
-        return view('posts.show',compact('site'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Site  $site
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Site $site)
-    {
-        return view('sites.edit',compact('site'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Site  $site
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Site $site)
-    {
-        $request->validate([
-            'title' => 'required',
-            'description' => 'required',
+        $site = $this->siteModel->firstOrCreate([
+            'long_url' => $long_url
         ]);
 
-        $site->update($request->all());
+        if ($site->short_url !== null){
+            return redirect()->route('sites.index')
+                ->with('success','Url already shorted.');
+        }
+
+        $site->short_url = $urlShortener->shortUrl($long_url, $site->id);
+
+        try {
+            $site->saveOrFail();
+        } catch (\Throwable $exception){
+            return redirect()->route('sites.index')
+                ->with('error', $exception->getMessage());
+        }
 
         return redirect()->route('sites.index')
-            ->with('success','Site updated successfully');
+            ->with('success','Url shorted successfully.');
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\UrlShortenerContract;
+use App\Services\UrlShortener;
 use Illuminate\Support\ServiceProvider;
 
 class UrlShortenerServiceProvider extends ServiceProvider
@@ -13,9 +15,7 @@ class UrlShortenerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind(UrlSh::class, function ($app) {
-            return new Transistor($app->make(PodcastParser::class));
-        });
+        $this->app->bind(UrlShortenerContract::class, UrlShortener::class);
     }
 
     /**

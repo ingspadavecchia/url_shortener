@@ -35,34 +35,22 @@ class UrlShortener implements UrlShortenerContract
     }
 
     /**
-     * function to expand the short url
+     * function to decode the short url
      *
      * @param string $short_url
-     * @return string
+     * @return int
      */
-    public function expandUrl(string $short_url): string
+    public function decodeUrl(string $short_url): int
     {
         //-- decode the short string to base 62 and convert to base 10 id --//
         $id = 0;
         while($len = strlen($short_url))
         {
-            $id += strpos($this->dict, $short_url[0]);
+            $id += strpos($this->dictionary, $short_url[0]);
             $id *= $len > 1 ? $this->base : 1;
             $short_url = substr($short_url, 1);
         }
 
-        //-- make sure long url pertaining to the decoded mysql id exists --//
-        $url_does_exist = mysql_query("SELECT long_url FROM urls WHERE id=$id");
-
-        //-- if it does, return the long url --//
-        if (mysql_num_rows($url_does_exist))
-        {
-            $row = mysql_fetch_object($url_does_exist);
-            return $row->long_url;
-        }
-        else
-        {
-            return FALSE;
-        }
+        return $id;
     }
 }

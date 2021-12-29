@@ -18,4 +18,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::resource('sites', SiteController::class);
+Route::resource('sites', SiteController::class)->only(['index', 'store', 'destroy']);
+
+Route::get('/sites/{short_url}', \App\Http\Controllers\RedirectShortUrl::class);

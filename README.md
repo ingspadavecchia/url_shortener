@@ -26,6 +26,8 @@ Run the database migrations (**Set the database connection in .env before migrat
 
 You can now access the server at http://localhost
 
+To decode urls and be redirected use http://localhost/sites/{short_url} for example: http://localhost/sites/g
+
 ## Database seeding
 
 **Populate the database with seed data with relationships which includes users, articles, comments, tags, favorites and follows. This can help you to quickly start testing the api or couple a frontend and start using it with ready content.**
